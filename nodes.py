@@ -201,6 +201,7 @@ class WanVideoTextEncodeCached:
             "quantization": (['disabled', 'fp8_e4m3fn'], {"default": 'disabled', "tooltip": "optional quantization method"}),
             "use_disk_cache": ("BOOLEAN", {"default": True, "tooltip": "Cache the text embeddings to disk for faster re-use, under the custom_nodes/ComfyUI-WanVideoWrapper/text_embed_cache directory"}),
             "device": (["gpu", "cpu"], {"default": "gpu", "tooltip": "Device to run the text encoding on."}),
+            "tiled_multiple": ("BOOLEAN", {"default": False, "tooltip": "tiled multiple prompts"}),
             },
             "optional": {
                 "extender_args": ("WANVIDEOPROMPTEXTENDER_ARGS", {"tooltip": "Use this node to extend the prompt with additional text."}),
@@ -275,7 +276,8 @@ of the original Wan templates or a custom system prompt.
             force_offload=False,
             model_to_offload=None,
             use_disk_cache=use_disk_cache,
-            device=device
+            device=device,
+            tiled_multiple=False
         )
         pbar.update(1)
         del t5
@@ -297,7 +299,7 @@ class WanVideoTextEncode:
                 "model_to_offload": ("WANVIDEOMODEL", {"tooltip": "Model to move to offload_device before encoding"}),
                 "use_disk_cache": ("BOOLEAN", {"default": False, "tooltip": "Cache the text embeddings to disk for faster re-use, under the custom_nodes/ComfyUI-WanVideoWrapper/text_embed_cache directory"}),
                 "device": (["gpu", "cpu"], {"default": "gpu", "tooltip": "Device to run the text encoding on."}),
-                "tiled_multiple": ("BOOLEAN", {"default": False}),
+                "tiled_multiple": ("BOOLEAN", {"default": False, "tooltip": "tiled multiple prompts"}),
             }
         }
 
