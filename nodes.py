@@ -297,6 +297,7 @@ class WanVideoTextEncode:
                 "model_to_offload": ("WANVIDEOMODEL", {"tooltip": "Model to move to offload_device before encoding"}),
                 "use_disk_cache": ("BOOLEAN", {"default": False, "tooltip": "Cache the text embeddings to disk for faster re-use, under the custom_nodes/ComfyUI-WanVideoWrapper/text_embed_cache directory"}),
                 "device": (["gpu", "cpu"], {"default": "gpu", "tooltip": "Device to run the text encoding on."}),
+                "tiled_multiple": ("BOOLEAN", {"default": False}),
             }
         }
 
@@ -307,7 +308,7 @@ class WanVideoTextEncode:
     DESCRIPTION = "Encodes text prompts into text embeddings. For rudimentary prompt travel you can input multiple prompts separated by '|', they will be equally spread over the video length"
 
 
-    def process(self, positive_prompt, negative_prompt, t5=None, force_offload=True, model_to_offload=None, use_disk_cache=False, device="gpu"):
+    def process(self, positive_prompt, negative_prompt, t5=None, force_offload=True, model_to_offload=None, use_disk_cache=False, device="gpu",tiled_multiple=False):
         if t5 is None and not use_disk_cache:
             raise ValueError("T5 encoder is required for text encoding. Please provide a valid T5 encoder or enable disk cache.")
 
@@ -383,7 +384,17 @@ class WanVideoTextEncode:
             if use_disk_cache and context is not None:
                 pass
             else:
-                context = encoder(positive_prompts, device_to)
+                if tiled_multiple :
+                    batch_size = 20
+                    context = []
+                    for i in range(0, len(all_weights), batch_size):
+                        batch_prompts = positive_prompts[i: i+batch_size]
+                        batch_context = encoder(batch_prompts, device_to)
+                        context.extend(batch_context)
+                    del batch_context,batch_prompts
+                else:
+                    context = encoder(positive_prompts, device_to)
+
                 # Apply weights to embeddings if any were extracted
                 for i, weights in enumerate(all_weights):
                     for text, weight in weights.items():
